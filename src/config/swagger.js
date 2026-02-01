@@ -1,6 +1,8 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+const path = require('path');
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -19,7 +21,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://api.nuviafinance.com',
+        url: 'https://api-nuvia.vercel.app',
         description: 'Production server',
       },
     ],
@@ -98,13 +100,12 @@ const options = {
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
   },
-  apis: ['./src/routes/*.js', './src/controllers/*.js'],
+  // Ensure we find the files correctly in Vercel environment
+  apis: [
+    path.join(__dirname, '../routes/*.js'),
+    path.join(__dirname, '../controllers/*.js')
+  ],
 };
 
 const specs = swaggerJsdoc(options);
