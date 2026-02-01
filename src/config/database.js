@@ -1,5 +1,7 @@
 
 
+const mongoose = require('mongoose');
+
 // Cached connection variable to persist across hot reloads in Serverless
 let cached = global.mongoose;
 
