@@ -72,6 +72,17 @@ const apiLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
+// Health check / Root route
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Nuvia Finance API is running',
+    version: '1.0.0',
+    docs: '/api-docs',
+    timestamp: new Date()
+  });
+});
+
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
