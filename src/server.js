@@ -33,7 +33,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "validator.swagger.io"],
-      connectSrc: ["'self'"]
+      connectSrc: ["'self'", "cdnjs.cloudflare.com"]
     }
   }
 }));
