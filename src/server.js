@@ -23,7 +23,27 @@ const leaderboardWorker = require('./workers/leaderboard.worker');
 const app = express();
 
 // Connect to MongoDB
-connectDB();
+// Connect to MongoDB
+// connectDB(); // Removed direct call, will use middleware
+
+// DB Connection Middleware for Serverless
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Database connection failed',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  } else {
+    next();
+  }
+});
 
 // Security middleware
 app.use(helmet({
