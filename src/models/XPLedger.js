@@ -125,7 +125,7 @@ xpLedgerSchema.statics.getUserLedger = async function(userId, options = {}) {
 // Static method to calculate total XP for a user (for verification)
 xpLedgerSchema.statics.calculateTotalXP = async function(userId) {
   const result = await this.aggregate([
-    { $match: { userId: mongoose.Types.ObjectId(userId) } },
+    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
     { $group: { _id: null, total: { $sum: '$deltaXP' } } }
   ]);
   
@@ -135,7 +135,7 @@ xpLedgerSchema.statics.calculateTotalXP = async function(userId) {
 // Static method to get XP summary by reason
 xpLedgerSchema.statics.getXPSummary = async function(userId) {
   return this.aggregate([
-    { $match: { userId: mongoose.Types.ObjectId(userId) } },
+    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
     {
       $group: {
         _id: '$reason',

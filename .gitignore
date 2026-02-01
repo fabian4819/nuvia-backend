@@ -22,3 +22,13 @@ Thumbs.db
 # Documentation & Requirements
 *.md
 *.pdf
+
+# Test scripts
+test-*.sh
+debug-*.sh
+auto-*.sh
+
+# Temporary scripts
+*.sh
+!build.sh
+!deploy.sh

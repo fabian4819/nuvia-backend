@@ -5,19 +5,9 @@ const xpRuleSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    enum: [
-      'connect_wallet',
-      'deposit',
-      'supply',
-      'borrow',
-      'swap',
-      'claim_faucet',
-      'select_strategy',
-      'complete_quest',
-      'referral_inviter',
-      'referral_invitee'
-    ],
-    index: true
+    index: true,
+    trim: true,
+    lowercase: true
   },
   xpAmount: {
     type: Number,

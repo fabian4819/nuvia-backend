@@ -142,14 +142,22 @@ class XPService {
   // Verify onchain event
   async verifyOnchainEvent(metadata) {
     try {
-      const { txHash, chainId, contractAddress } = metadata;
+      const { txHash, chainId, contractAddress, tokenSymbol } = metadata;
+      const contractRegistry = require('../utils/contractRegistry');
       
-      // Get expected contract address from env if needed
+      // Get expected contract address from registry if not provided
       let expectedContract = contractAddress;
       
-      if (!expectedContract) {
-        // You can add logic here to get expected contract from env based on event type
-        expectedContract = null;
+      if (!expectedContract && tokenSymbol) {
+        // Auto-detect expected contract based on event type
+        const eventType = metadata.eventType || 'deposit'; // Default to deposit
+        expectedContract = contractRegistry.getExpectedContract(eventType, metadata);
+        
+        logger.info('Auto-detected expected contract', {
+          eventType,
+          tokenSymbol,
+          expectedContract
+        });
       }
       
       const verification = await web3Service.verifyTransaction(
@@ -157,6 +165,30 @@ class XPService {
         chainId,
         expectedContract
       );
+      
+      // Additional check: verify contract is a Nuvia contract
+      if (verification.verified && verification.receipt?.to) {
+        const isNuviaContract = contractRegistry.isNuviaContract(verification.receipt.to);
+        const contractType = contractRegistry.getContractType(verification.receipt.to);
+        
+        if (!isNuviaContract) {
+          logger.warn('Transaction not sent to Nuvia contract', {
+            txHash,
+            contractAddress: verification.receipt.to
+          });
+          
+          return {
+            verified: false,
+            reason: 'Transaction not sent to a valid Nuvia contract'
+          };
+        }
+        
+        logger.info('Nuvia contract verified', {
+          txHash,
+          contractType,
+          contractAddress: verification.receipt.to
+        });
+      }
       
       return verification;
     } catch (error) {
@@ -269,8 +301,8 @@ class XPService {
         {
           actionType: 'connect_wallet',
           xpAmount: parseInt(process.env.DEFAULT_CONNECT_WALLET_XP) || 50,
-          dailyLimit: 1,
-          cooldownMinutes: 1440, // 24 hours
+          dailyLimit: parseInt(process.env.CONNECT_WALLET_DAILY_LIMIT) || 1,
+          cooldownMinutes: parseInt(process.env.CONNECT_WALLET_COOLDOWN_MINUTES) || 1440, // Default 24 hours
           description: 'Connect wallet for the first time each day',
           metadata: {
             displayName: 'Connect Wallet',
@@ -281,7 +313,7 @@ class XPService {
           actionType: 'deposit',
           xpAmount: 100,
           minAmount: '10',
-          validChains: [8453, 84532],
+          validChains: [84532], // Base Sepolia only
           description: 'Deposit funds into protocol',
           metadata: {
             displayName: 'Deposit',
@@ -292,7 +324,7 @@ class XPService {
           actionType: 'supply',
           xpAmount: 150,
           minAmount: '10',
-          validChains: [8453, 84532],
+          validChains: [84532], // Base Sepolia only
           description: 'Supply assets to lending protocol',
           metadata: {
             displayName: 'Supply Assets',

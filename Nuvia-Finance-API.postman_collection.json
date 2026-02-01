@@ -1,0 +1,992 @@
+{
+    "info": {
+        "_postman_id": "nuvia-finance-api-collection",
+        "name": "Nuvia Finance API",
+        "description": "Complete API collection for Nuvia Finance Backend with authentication, XP system, leaderboard, referral, and quests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{jwt_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "jwt_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "wallet_address",
+            "value": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+            "type": "string"
+        },
+        {
+            "key": "nonce",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "referral_code",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "auth": {
+                    "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/health",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "health"
+                    ]
+                },
+                "description": "Check server health and worker status"
+            }
+        },
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "1. Request Nonce",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('nonce', response.data.nonce);",
+                                    "    console.log('Nonce saved:', response.data.nonce);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"walletAddress\": \"{{wallet_address}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/nonce",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "nonce"
+                            ]
+                        },
+                        "description": "Request nonce for wallet signature. Sign the returned message with your wallet."
+                    }
+                },
+                {
+                    "name": "2. Verify Signature",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('jwt_token', response.data.token);",
+                                    "    pm.collectionVariables.set('referral_code', response.data.user.referralCode);",
+                                    "    console.log('JWT Token saved');",
+                                    "    console.log('Referral Code:', response.data.user.referralCode);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"walletAddress\": \"{{wallet_address}}\",\n  \"signature\": \"0x...\",\n  \"nonce\": \"{{nonce}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/verify",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify"
+                            ]
+                        },
+                        "description": "Verify wallet signature and get JWT token. Replace signature with actual signed message."
+                    }
+                },
+                {
+                    "name": "3. Get My Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "Get current user profile (requires authentication)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "XP System",
+            "item": [
+                {
+                    "name": "Get XP Rules",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/xp/rules",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "xp",
+                                "rules"
+                            ]
+                        },
+                        "description": "Get all active XP rules (public endpoint)"
+                    }
+                },
+                {
+                    "name": "Submit Event - Connect Wallet",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"type\": \"connect_wallet\",\n  \"metadata\": {\n    \"source\": \"web\",\n    \"timestamp\": \"{{$timestamp}}\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/events",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events"
+                            ]
+                        },
+                        "description": "Submit connect wallet event (50 XP, daily limit 1)"
+                    }
+                },
+                {
+                    "name": "Submit Event - Deposit",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"type\": \"deposit\",\n  \"metadata\": {\n    \"txHash\": \"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\n    \"chainId\": 8453,\n    \"amount\": \"100\",\n    \"tokenSymbol\": \"USDC\",\n    \"protocol\": \"Moonwell\"\n  },\n  \"idempotencyKey\": \"deposit-{{$timestamp}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/events",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events"
+                            ]
+                        },
+                        "description": "Submit deposit event (100 XP, min 10 USDC)"
+                    }
+                },
+                {
+                    "name": "Submit Event - Claim Faucet",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"type\": \"claim_faucet\",\n  \"metadata\": {\n    \"txHash\": \"0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890\",\n    \"chainId\": 84532,\n    \"amount\": \"1\",\n    \"tokenSymbol\": \"ETH\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/events",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events"
+                            ]
+                        },
+                        "description": "Submit claim faucet event (25 XP, daily limit 1)"
+                    }
+                },
+                {
+                    "name": "Get My XP",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/xp/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "xp",
+                                "me"
+                            ]
+                        },
+                        "description": "Get current user XP summary"
+                    }
+                },
+                {
+                    "name": "Get My XP Ledger",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/xp/ledger?limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "xp",
+                                "ledger"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                },
+                                {
+                                    "key": "skip",
+                                    "value": "0",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "reason",
+                                    "value": "deposit",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get XP transaction history"
+                    }
+                },
+                {
+                    "name": "Get My Events",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/events/me?limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                "me"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "deposit",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "verified",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get user event history"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Leaderboard",
+            "item": [
+                {
+                    "name": "Get All-Time Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/leaderboard?period=all-time&limit=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "leaderboard"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "all-time"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "skip",
+                                    "value": "0",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all-time leaderboard (public)"
+                    }
+                },
+                {
+                    "name": "Get Daily Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/leaderboard?period=daily&limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "leaderboard"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "daily"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                }
+                            ]
+                        },
+                        "description": "Get daily leaderboard (public)"
+                    }
+                },
+                {
+                    "name": "Get Weekly Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/leaderboard?period=weekly&limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "leaderboard"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "weekly"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                }
+                            ]
+                        },
+                        "description": "Get weekly leaderboard (public)"
+                    }
+                },
+                {
+                    "name": "Get My Rank",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/leaderboard/me?period=all-time",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "leaderboard",
+                                "me"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "all-time"
+                                }
+                            ]
+                        },
+                        "description": "Get current user rank in leaderboard"
+                    }
+                },
+                {
+                    "name": "Get Latest Snapshot",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/leaderboard/snapshot/latest?period=all-time",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "leaderboard",
+                                "snapshot",
+                                "latest"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "all-time"
+                                }
+                            ]
+                        },
+                        "description": "Get latest snapshot metadata (public)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Referral",
+            "item": [
+                {
+                    "name": "Get My Referral Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/referral/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "referral",
+                                "me"
+                            ]
+                        },
+                        "description": "Get my referral code and stats"
+                    }
+                },
+                {
+                    "name": "Track Referral",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"referralCode\": \"NUV-ABC123\",\n  \"source\": \"web\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/referral/track",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "referral",
+                                "track"
+                            ]
+                        },
+                        "description": "Track referral when signing up with referral code"
+                    }
+                },
+                {
+                    "name": "Verify Referral Code",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/referral/verify/NUV-ABC123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "referral",
+                                "verify",
+                                "NUV-ABC123"
+                            ]
+                        },
+                        "description": "Verify if referral code is valid (public)"
+                    }
+                },
+                {
+                    "name": "Get Referral History",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/referral/history?limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "referral",
+                                "history"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "rewarded",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get my referral history"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Quests",
+            "item": [
+                {
+                    "name": "Get Today's Quests",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/quests/today",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "quests",
+                                "today"
+                            ]
+                        },
+                        "description": "Get today's daily quests with progress"
+                    }
+                },
+                {
+                    "name": "Get All Active Quests",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/quests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "quests"
+                            ]
+                        },
+                        "description": "Get all active quests with progress"
+                    }
+                },
+                {
+                    "name": "Claim Quest Reward",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"questId\": \"quest_id_here\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/quests/claim",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "quests",
+                                "claim"
+                            ]
+                        },
+                        "description": "Claim completed quest reward"
+                    }
+                },
+                {
+                    "name": "Get Quest History",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/quests/history?limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "quests",
+                                "history"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                }
+                            ]
+                        },
+                        "description": "Get claimed quest history"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Waitlist (Legacy)",
+            "item": [
+                {
+                    "name": "Join Waitlist",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"user@example.com\",\n  \"walletAddress\": \"0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb\",\n  \"referralCode\": \"NUV-ABC123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/waitlist/join",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "waitlist",
+                                "join"
+                            ]
+                        },
+                        "description": "Join waitlist (legacy endpoint for backward compatibility)"
+                    }
+                },
+                {
+                    "name": "Get Position by Email",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/waitlist/position/user@example.com",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "waitlist",
+                                "position",
+                                "user@example.com"
+                            ]
+                        },
+                        "description": "Get waitlist position by email"
+                    }
+                },
+                {
+                    "name": "Get Position by Wallet",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/waitlist/position/{{wallet_address}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "waitlist",
+                                "position",
+                                "{{wallet_address}}"
+                            ]
+                        },
+                        "description": "Get waitlist position by wallet address"
+                    }
+                },
+                {
+                    "name": "Get Waitlist Stats",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/waitlist/stats",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "waitlist",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get waitlist statistics"
+                    }
+                },
+                {
+                    "name": "Verify Referral Code",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/waitlist/verify/NUV-ABC123",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "waitlist",
+                                "verify",
+                                "NUV-ABC123"
+                            ]
+                        },
+                        "description": "Verify if referral code is valid (legacy endpoint)"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin",
+            "item": [
+                {
+                    "name": "Generate Leaderboard Snapshot",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"period\": \"all-time\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/leaderboard/generate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "leaderboard",
+                                "generate"
+                            ]
+                        },
+                        "description": "Manually generate leaderboard snapshot (admin only)"
+                    }
+                },
+                {
+                    "name": "Override Referral",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"referralId\": \"referral_id_here\",\n  \"action\": \"approve\",\n  \"reason\": \"Manual verification\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/referral/override",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "referral",
+                                "override"
+                            ]
+                        },
+                        "description": "Override referral status (admin only)"
+                    }
+                },
+                {
+                    "name": "Create Quest",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"New Quest\",\n  \"description\": \"Quest description\",\n  \"cadence\": \"daily\",\n  \"rules\": {\n    \"type\": \"event_count\",\n    \"eventType\": \"swap\",\n    \"targetCount\": 3\n  },\n  \"rewardXP\": 200,\n  \"metadata\": {\n    \"icon\": \"🔄\",\n    \"category\": \"daily\",\n    \"difficulty\": \"medium\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/quests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "quests"
+                            ]
+                        },
+                        "description": "Create new quest (admin only)"
+                    }
+                },
+                {
+                    "name": "Update Quest",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rewardXP\": 250,\n  \"isActive\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/quests/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "quests",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "quest_id_here"
+                                }
+                            ]
+                        },
+                        "description": "Update existing quest (admin only)"
+                    }
+                }
+            ]
+        }
+    ]
+}

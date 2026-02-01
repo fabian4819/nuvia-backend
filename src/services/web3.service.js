@@ -10,12 +10,9 @@ class Web3Service {
   // Initialize providers for different chains
   initializeProviders() {
     try {
-      // Add your RPC URLs here
+      // Base Sepolia Testnet only
       const rpcUrls = {
-        8453: process.env.BASE_RPC_URL || 'https://mainnet.base.org', // Base
         84532: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org', // Base Sepolia
-        1: process.env.ETH_RPC_URL || 'https://eth.llamarpc.com', // Ethereum
-        // Add more chains as needed
       };
       
       for (const [chainId, rpcUrl] of Object.entries(rpcUrls)) {

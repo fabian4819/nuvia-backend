@@ -139,7 +139,7 @@ referralSchema.statics.getUserReferrals = async function(userId, options = {}) {
 // Static method to get referral stats
 referralSchema.statics.getReferralStats = async function(userId) {
   const stats = await this.aggregate([
-    { $match: { inviterUserId: mongoose.Types.ObjectId(userId) } },
+    { $match: { inviterUserId: new mongoose.Types.ObjectId(userId) } },
     {
       $group: {
         _id: '$status',
