@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Waitlist = require('../models/Waitlist');
 const web3Service = require('../services/web3.service');
 const logger = require('../utils/logger');
 
@@ -38,15 +39,33 @@ exports.requestNonce = async (req, res) => {
     
     // Find or create user
     let user = await User.findOne({ walletAddress: normalizedAddress });
-    
+
     if (!user) {
-      user = await User.create({
+      // Check if user already has a waitlist entry with a referral code
+      const waitlistEntry = await Waitlist.findOne({ walletAddress: normalizedAddress });
+
+      const userData = {
         walletAddress: normalizedAddress
-      });
-      
+      };
+
+      // If they have a waitlist entry, use that referral code
+      if (waitlistEntry && waitlistEntry.referralCode) {
+        userData.referralCode = waitlistEntry.referralCode;
+
+        logger.info('Using existing waitlist referral code for new user', {
+          walletAddress: normalizedAddress,
+          referralCode: waitlistEntry.referralCode,
+          requestId: req.requestId
+        });
+      }
+
+      user = await User.create(userData);
+
       logger.info('New user created', {
         userId: user._id,
         walletAddress: normalizedAddress,
+        referralCode: user.referralCode,
+        fromWaitlist: !!waitlistEntry,
         requestId: req.requestId
       });
     }
