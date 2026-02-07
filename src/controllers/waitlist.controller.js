@@ -28,11 +28,34 @@ exports.joinWaitlist = async (req, res, next) => {
       });
     }
 
-    // Validate referral code if provided
+    // Check if this wallet already has a User account (use their referral code)
+    let existingUser = await User.findOne({ walletAddress: walletAddress.toLowerCase() });
+    let assignedReferralCode = null;
+
+    if (existingUser) {
+      // Use the User's referral code for consistency
+      assignedReferralCode = existingUser.referralCode;
+    }
+
+    // Validate referral code if provided (check both User and Waitlist)
     let referrer = null;
+    let referrerUser = null;
+
     if (referralCode) {
-      referrer = await Waitlist.findOne({ referralCode: referralCode.toUpperCase() });
-      if (!referrer) {
+      const upperCode = referralCode.toUpperCase();
+
+      // First try to find in User collection (preferred)
+      referrerUser = await User.findOne({ referralCode: upperCode });
+
+      if (referrerUser) {
+        // Also get their waitlist entry if it exists
+        referrer = await Waitlist.findOne({ walletAddress: referrerUser.walletAddress });
+      } else {
+        // Fallback to waitlist-only referral code
+        referrer = await Waitlist.findOne({ referralCode: upperCode });
+      }
+
+      if (!referrerUser && !referrer) {
         return res.status(400).json({
           success: false,
           message: 'Invalid referral code'
@@ -45,6 +68,7 @@ exports.joinWaitlist = async (req, res, next) => {
       email,
       walletAddress,
       referredBy: referralCode ? referralCode.toUpperCase() : null,
+      referralCode: assignedReferralCode, // Use User code if exists, otherwise auto-generated
       metadata: {
         ipAddress: req.ip || req.connection.remoteAddress,
         userAgent: req.get('user-agent'),
@@ -55,28 +79,29 @@ exports.joinWaitlist = async (req, res, next) => {
     await waitlistEntry.save();
 
     // Update referrer's count and reward XP if applicable
-    if (referrer) {
-      await Waitlist.incrementReferralCount(referrer.referralCode);
-
-      // Find or create user for the referrer and give 100 XP
-      let referrerUser = await User.findOne({ walletAddress: referrer.walletAddress });
-
-      if (referrerUser) {
-        // Give 100 XP to referrer
-        const referralXP = parseInt(process.env.WAITLIST_REFERRAL_XP) || 100;
-
-        await XPLedger.addXP(
-          referrerUser._id,
-          referralXP,
-          'other',
-          `Waitlist referral reward - ${email} joined using your code`,
-          {
-            waitlistId: waitlistEntry._id,
-            inviteeEmail: email,
-            inviteeWallet: walletAddress
-          }
-        );
+    if (referrerUser) {
+      // Update waitlist count if they have a waitlist entry
+      if (referrer) {
+        await Waitlist.incrementReferralCount(referrer.referralCode);
       }
+
+      // Give 100 XP to referrer
+      const referralXP = parseInt(process.env.WAITLIST_REFERRAL_XP) || 100;
+
+      await XPLedger.addXP(
+        referrerUser._id,
+        referralXP,
+        'other',
+        `Waitlist referral reward - ${email} joined using your code`,
+        {
+          waitlistId: waitlistEntry._id,
+          inviteeEmail: email,
+          inviteeWallet: walletAddress
+        }
+      );
+    } else if (referrer) {
+      // Old waitlist-only referral (no User account)
+      await Waitlist.incrementReferralCount(referrer.referralCode);
     }
 
     // Return success response

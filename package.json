@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.js",
     "seed": "node src/scripts/seed.script.js",
     "migrate": "node src/scripts/migrate.script.js",
+    "sync-referrals": "node src/scripts/sync-referral-codes.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
