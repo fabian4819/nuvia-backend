@@ -6,7 +6,7 @@ const Waitlist = require('../models/Waitlist');
  */
 exports.joinWaitlist = async (req, res, next) => {
   try {
-    const { email, walletAddress, referredBy } = req.body;
+    const { email, walletAddress, referralCode } = req.body;
 
     // Check if email already exists
     const existingEmail = await Waitlist.findOne({ email });
@@ -28,8 +28,8 @@ exports.joinWaitlist = async (req, res, next) => {
 
     // Validate referral code if provided
     let referrer = null;
-    if (referredBy) {
-      referrer = await Waitlist.findOne({ referralCode: referredBy.toUpperCase() });
+    if (referralCode) {
+      referrer = await Waitlist.findOne({ referralCode: referralCode.toUpperCase() });
       if (!referrer) {
         return res.status(400).json({
           success: false,
@@ -42,7 +42,7 @@ exports.joinWaitlist = async (req, res, next) => {
     const waitlistEntry = new Waitlist({
       email,
       walletAddress,
-      referredBy: referredBy ? referredBy.toUpperCase() : null,
+      referredBy: referralCode ? referralCode.toUpperCase() : null,
       metadata: {
         ipAddress: req.ip || req.connection.remoteAddress,
         userAgent: req.get('user-agent'),
