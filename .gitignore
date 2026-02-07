@@ -3,6 +3,8 @@ node_modules/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 
 # Logs
 logs/
@@ -22,6 +24,8 @@ Thumbs.db
 # Documentation & Requirements
 *.md
 *.pdf
+!DEPLOYMENT.md
+!.github/**
 
 # Test scripts
 test-*.sh
@@ -32,3 +36,4 @@ auto-*.sh
 *.sh
 !build.sh
 !deploy.sh
+!setup-github-secrets.sh
