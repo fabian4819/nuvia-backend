@@ -64,17 +64,23 @@ exports.joinWaitlist = async (req, res, next) => {
     }
 
     // Create new waitlist entry
-    const waitlistEntry = new Waitlist({
+    const waitlistData = {
       email,
       walletAddress,
       referredBy: referralCode ? referralCode.toUpperCase() : null,
-      referralCode: assignedReferralCode, // Use User code if exists, otherwise auto-generated
       metadata: {
         ipAddress: req.ip || req.connection.remoteAddress,
         userAgent: req.get('user-agent'),
         source: req.body.source || 'web'
       }
-    });
+    };
+
+    // Only set referralCode if User account exists (otherwise let model auto-generate)
+    if (assignedReferralCode) {
+      waitlistData.referralCode = assignedReferralCode;
+    }
+
+    const waitlistEntry = new Waitlist(waitlistData);
 
     await waitlistEntry.save();
 
