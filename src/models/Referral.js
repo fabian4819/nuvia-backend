@@ -10,8 +10,7 @@ const referralSchema = new mongoose.Schema({
   inviteeUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   referralCode: {
     type: String,
@@ -86,11 +85,10 @@ const referralSchema = new mongoose.Schema({
 
 // Compound indexes
 referralSchema.index({ inviterUserId: 1, status: 1 });
-referralSchema.index({ inviteeUserId: 1 });
 referralSchema.index({ referralCode: 1, status: 1 });
 referralSchema.index({ status: 1, createdAt: 1 });
 
-// Ensure one invitee can only be referred once
+// Ensure one invitee can only be referred once (this also creates the index for inviteeUserId)
 referralSchema.index({ inviteeUserId: 1 }, { unique: true });
 
 // Static method to create referral

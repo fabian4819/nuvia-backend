@@ -75,10 +75,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for performance
-userSchema.index({ walletAddress: 1 });
-userSchema.index({ email: 1 });
-userSchema.index({ referralCode: 1 });
+// Indexes for performance (walletAddress, email, referralCode already indexed via unique/index options)
 userSchema.index({ totalXP: -1 }); // For leaderboard queries
 userSchema.index({ createdAt: 1 });
 userSchema.index({ isActive: 1 });

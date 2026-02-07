@@ -30,8 +30,7 @@ const waitlistSchema = new mongoose.Schema({
   referralCode: {
     type: String,
     unique: true,
-    uppercase: true,
-    index: true
+    uppercase: true
   },
   referredBy: {
     type: String,
@@ -60,10 +59,7 @@ const waitlistSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for performance
-waitlistSchema.index({ email: 1 });
-waitlistSchema.index({ walletAddress: 1 });
-waitlistSchema.index({ referralCode: 1 });
+// Indexes for performance (email, walletAddress, referralCode already indexed via unique option)
 waitlistSchema.index({ createdAt: 1 });
 
 // Pre-save middleware to generate referral code and position

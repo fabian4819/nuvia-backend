@@ -4,14 +4,12 @@ const leaderboardRowSchema = new mongoose.Schema({
   snapshotId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'LeaderboardSnapshot',
-    required: true,
-    index: true
+    required: true
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   score: {
     type: Number,
@@ -35,10 +33,9 @@ const leaderboardRowSchema = new mongoose.Schema({
 
 // Compound indexes for efficient queries
 leaderboardRowSchema.index({ snapshotId: 1, rank: 1 });
-leaderboardRowSchema.index({ snapshotId: 1, userId: 1 });
 leaderboardRowSchema.index({ snapshotId: 1, score: -1 });
 
-// Ensure unique user per snapshot
+// Ensure unique user per snapshot (this also creates the compound index for snapshotId + userId)
 leaderboardRowSchema.index({ snapshotId: 1, userId: 1 }, { unique: true });
 
 // Static method to get leaderboard for a snapshot
