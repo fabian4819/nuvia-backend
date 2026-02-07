@@ -15,16 +15,27 @@ const options = {
         url: 'https://nuviafinance.com',
       },
     },
-    servers: [
-      {
-        url: 'https://api-nuvia.vercel.app',
-        description: 'Production server',
-      },
-      {
-        url: 'http://localhost:3000',
-        description: 'Development server',
-      },
-    ],
+    servers: process.env.NODE_ENV === 'production'
+      ? [
+          {
+            url: 'https://api-nuvia.vercel.app',
+            description: 'Production server',
+          },
+          {
+            url: 'http://localhost:3000',
+            description: 'Development server',
+          },
+        ]
+      : [
+          {
+            url: 'http://localhost:3000',
+            description: 'Development server (Local)',
+          },
+          {
+            url: 'https://api-nuvia.vercel.app',
+            description: 'Production server',
+          },
+        ],
     components: {
       securitySchemes: {
         bearerAuth: {
