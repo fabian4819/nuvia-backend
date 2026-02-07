@@ -29,12 +29,21 @@ exports.joinWaitlist = async (req, res, next) => {
     }
 
     // Check if this wallet already has a User account (use their referral code)
-    let existingUser = await User.findOne({ walletAddress: walletAddress.toLowerCase() });
+    const normalizedWallet = walletAddress.toLowerCase();
+    console.log('🔍 Looking for User with wallet:', normalizedWallet);
+
+    let existingUser = await User.findOne({ walletAddress: normalizedWallet });
     let assignedReferralCode = null;
+
+    console.log('👤 Found User:', existingUser ? 'YES' : 'NO');
+    if (existingUser) {
+      console.log('   User referralCode:', existingUser.referralCode);
+    }
 
     if (existingUser) {
       // Use the User's referral code for consistency
       assignedReferralCode = existingUser.referralCode;
+      console.log('✅ Will use User referral code:', assignedReferralCode);
     }
 
     // Validate referral code if provided (check both User and Waitlist)
@@ -78,11 +87,16 @@ exports.joinWaitlist = async (req, res, next) => {
     // Only set referralCode if User account exists (otherwise let model auto-generate)
     if (assignedReferralCode) {
       waitlistData.referralCode = assignedReferralCode;
+      console.log('📝 Setting waitlist referralCode to:', assignedReferralCode);
+    } else {
+      console.log('🎲 No assigned code, will auto-generate');
     }
 
     const waitlistEntry = new Waitlist(waitlistData);
 
     await waitlistEntry.save();
+
+    console.log('💾 Saved waitlist with referralCode:', waitlistEntry.referralCode);
 
     // Update referrer's count and reward XP if applicable
     if (referrerUser) {

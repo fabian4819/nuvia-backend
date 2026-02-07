@@ -65,25 +65,27 @@ waitlistSchema.index({ createdAt: 1 });
 // Pre-save middleware to generate referral code and position
 waitlistSchema.pre('save', async function(next) {
   if (this.isNew) {
-    // Generate unique referral code
-    let code;
-    let isUnique = false;
-    
-    while (!isUnique) {
-      code = generateReferralCode();
-      const existing = await this.constructor.findOne({ referralCode: code });
-      if (!existing) {
-        isUnique = true;
+    // Generate unique referral code ONLY if not already set
+    if (!this.referralCode) {
+      let code;
+      let isUnique = false;
+
+      while (!isUnique) {
+        code = generateReferralCode();
+        const existing = await this.constructor.findOne({ referralCode: code });
+        if (!existing) {
+          isUnique = true;
+        }
       }
+
+      this.referralCode = code;
     }
-    
-    this.referralCode = code;
 
     // Calculate position (total count + 1)
     const count = await this.constructor.countDocuments();
     this.position = count + 1;
   }
-  
+
   next();
 });
 
