@@ -58,8 +58,8 @@ const xpLedgerSchema = new mongoose.Schema({
 
 // Compound indexes for common queries
 xpLedgerSchema.index({ userId: 1, createdAt: -1 });
-xpLedgerSchema.index({ eventId: 1 });
 xpLedgerSchema.index({ reason: 1 });
+// eventId already indexed via "index: true" on field definition
 
 // Static method to add XP entry
 xpLedgerSchema.statics.addXP = async function(userId, deltaXP, reason, description = '', metadata = {}, eventId = null) {
