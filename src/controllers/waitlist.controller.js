@@ -3,6 +3,17 @@ const User = require('../models/User');
 const XPLedger = require('../models/XPLedger');
 
 /**
+ * Helper function to mask wallet address
+ * Shows first 6 and last 4 characters
+ */
+const maskWalletAddress = (address) => {
+  if (!address || address.length < 10) return address;
+  const start = address.substring(0, 6);
+  const end = address.substring(address.length - 4);
+  return `${start}...${end}`;
+};
+
+/**
  * Join waitlist
  * POST /api/waitlist/join
  */
@@ -197,7 +208,7 @@ exports.getStats = async (req, res, next) => {
     const topReferrers = await Waitlist.find()
       .sort({ 'metadata.referralCount': -1 })
       .limit(10)
-      .select('email referralCode metadata.referralCount');
+      .select('email walletAddress referralCode metadata.referralCount');
 
     // Get recent entries
     const recentEntries = await Waitlist.find()
@@ -213,6 +224,7 @@ exports.getStats = async (req, res, next) => {
         approved: approvedEntries,
         topReferrers: topReferrers.map(r => ({
           email: r.email,
+          walletAddress: maskWalletAddress(r.walletAddress),
           referralCode: r.referralCode,
           referralCount: r.metadata.referralCount || 0
         })),
